@@ -54,3 +54,11 @@ jobs:
         - name: View Dir Tree
           working-directory:  ./kernel/
           run: tree -L 2
+          
+          -name: Upload Kernel
+          uses: actions/upload-artifact@v2
+          with:
+            name: kernel
+            path: ./kernel/linux-5.18.14/arch/x86_64/boot/bzImage
+            if-no-files-found: error
+          
