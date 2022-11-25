@@ -55,9 +55,16 @@ jobs:
           working-directory:  ./kernel/
           run: tree -L 2
           
-          -name: Upload Kernel
-          uses: actions/upload-artifact@v2
-            name: kernel
-            path: ./kernel/linux-5.18.14/arch/x86_64/boot/bzImage
-            if-no-files-found: error
+           - name: upload
+          uses: svenstaro/upload-release-action@v2
+          with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            file: ./kernel/linux-5.18.14/arch/x86/boot/bzImage
+            tag: ${{ github.ref }}
+            overwrite: true
+            file_glob: true
+            asset_name: bzImage
+            asset_content_type: application/octet-stream
           
+        
+        
