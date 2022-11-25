@@ -1,0 +1,56 @@
+name: Build_5_18_4
+
+on:
+    push:
+        branches: [build]
+
+jobs:
+    compile:
+        runs-on: ubuntu-latest
+
+        steps:
+        - uses: actions/checkout@v3
+        
+        - name: Install Dependencies
+          run:  | 
+            sudo apt install -y curl wget gcc bison make cmake build-essential libncurses-dev bison flex libssl-dev libelf-dev fakeroot tree
+            mkdir ./kernel
+          
+        - name: Fetch source
+          working-directory: ./kernel          
+          run:  |
+            wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.18.14.tar.xz
+            wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.18.14.tar.sign
+            
+        - name: Verify Sources
+          working-directory: ./kernel
+          run: |
+            unxz -v linux-5.18.14.tar.xz
+            gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 647F28654894E3BD457199BE38DBBDC86092693E
+            gpg --verify linux-5.18.14.tar.sign
+            
+        - name: Extract Tarball
+          working-directory: ./kernel
+          run:  |
+            tar -xf linux-5.18.14.tar
+            sudo chown -R $(whoami):$(whoami) linux-5.18.14 
+            
+        - name: Clean Kernel tree
+          working-directory: ./kernel/linux-5.18.14
+          run: make mrproper      
+        
+        - name: Configure and Make
+          working-directory:  ./kernel/linux-5.18.14
+          run: |
+            wget https://raw.githubusercontent.com/whokilleddb/build-a-kernel-using-github-actions/main/my-kernel-config -O .config
+            make -j $(nproc)
+            make modules
+            make bzImage
+        - name: Make Modules
+          working-directory:  ./kernel/linux-5.18.14
+          run: |
+            make modules
+            make bzImage
+        - name: View Dir Tree
+          working-directory:  ./kernel/
+          run: tree -L 2
